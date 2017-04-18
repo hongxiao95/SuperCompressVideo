@@ -87,3 +87,9 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+*.avi
+*.mp4
+*.mp3
+/SourceVideos/*
+/OutputVideos/*
