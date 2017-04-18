@@ -92,4 +92,6 @@ ENV/
 *.mp4
 *.mp3
 /SourceVideos/*
-/OutputVideos/*/*.zip
+/OutputVideos/*
+/*.zip
+/DemoThings/*
