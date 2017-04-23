@@ -4,7 +4,15 @@ import copy
 import random
 from PIL import Image
 import time
-
+'''
+重构步骤：
+1、迁移函数定义、去除多线程部分
+2、移除函数外部变量依赖
+3、剥离函数到模块文件
+4、输入输出视频画面大小的一般化
+5、函数形参表改造
+6、主函数参数化调用
+'''
 sourceVideoFileName = r"../SourceVideos/SourceVideo2.mp4"
 outPutVideoFileName = r"../OutputVideos/Output1.avi"
 outPutDifFileName = r"../OutputVideos/Diff1.avi"
@@ -20,6 +28,44 @@ def judgeMoving(img, rec):
                 recTotalNumber += img[i][j][j % 3]
     return recTotalNumber > 16 * 16 * 4
 #1023 means 16 * 16 * 4  means 16 * 16 * 35 / 3(rgb) / 3(skiped pix)
+
+def partProcess(partSt, partEnd, no):
+    for i in range(int(len(imgs) * partSt), int(len(imgs) * partEnd)):
+        moveRec = [] #存储存在动作的方格
+        cv2.absdiff(imgs[i], resAve, imgdiff) #获取差值绝对值图像
+        imgdifPart[no].append(copy.copy(imgdiff)) #差值图像存入该线程的差值图像库数组
+
+        #检测存在动作的方格，并以方格索引的方式存入moveRec tuple(colIndex, rowIndex)
+        for colIndex in range(len(smallRecs)):
+            for rowIndex in range(len(smallRecs[0])):
+                if judgeMoving(imgdiff, smallRecs[colIndex][rowIndex]):
+                    moveRec.append((colIndex, rowIndex))
+                    if colIndex > 11:
+                        motionLocation[i][1] = True
+                    else:
+                        motionLocation[i][0] = True
+        #绘制存在动作的方格
+        for recIndex in moveRec:
+            cv2.rectangle(imgs[i], smallRecs[recIndex[0]][recIndex[1]][0], smallRecs[recIndex[0]][recIndex[1]][1],
+                          (0, 0, 255), thickness=1)
+        #计算完成速度并显示
+        finishRate = i / len(imgs) * 100
+        print(("\rMotion Detection Processing: %4.2f %%\t" % finishRate) + "▋" * int(finishRate/5), end='') if i & 15 == 0 else 0
+    
+    #未完成线程数递减
+    unFinished[0] -= 1
+    print("\rMotion Detection Processing:  100%\t", "▋" * 20, "\nMotion Detection Finished, Video Generating...")
+
+#下沉并拼接的函数
+def cutMoveSide(newPos, inImgs, i, fromImgs, side):
+    if side == 'L':
+        inImgs[newPos][0:len(imgs[0]), 0: int(len(imgs[0][0])/2)] = fromImgs[i][0:len(imgs[0]), 0: int(len(imgs[0][0])/2)]
+        cv2.putText(inImgs[newPos], "ORIGIN: " + str(int(i / fps / 60)) + " : " + (str(int(i / fps % 60))),(10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75 , (0,0,255),2)
+    else:
+        inImgs[newPos][0:len(imgs[0]), int(len(imgs[0][0]) / 2): int(len(imgs[0][0]))] = fromImgs[i][0:len(imgs[0]), int(len(imgs[0][0]) / 2): int(len(imgs[0][0]))]
+        cv2.putText(inImgs[newPos], "ORIGIN: " + str(int(i / fps / 60)) + " : " + (str(int(i / fps % 60))), (200, 20),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+
 
 
 #获取已剔除静止镜头的源视频为cap
@@ -93,33 +139,6 @@ imgdiff = copy.deepcopy(resAve)
 unFinished = [threadCount]
 
 #函数，处理一部分视频区间的动作检测
-def partProcess(partSt, partEnd, no):
-    for i in range(int(len(imgs) * partSt), int(len(imgs) * partEnd)):
-        moveRec = [] #存储存在动作的方格
-        cv2.absdiff(imgs[i], resAve, imgdiff) #获取差值绝对值图像
-        imgdifPart[no].append(copy.copy(imgdiff)) #差值图像存入该线程的差值图像库数组
-
-        #检测存在动作的方格，并以方格索引的方式存入moveRec tuple(colIndex, rowIndex)
-        for colIndex in range(len(smallRecs)):
-            for rowIndex in range(len(smallRecs[0])):
-                if judgeMoving(imgdiff, smallRecs[colIndex][rowIndex]):
-                    moveRec.append((colIndex, rowIndex))
-                    if colIndex > 11:
-                        motionLocation[i][1] = True
-                    else:
-                        motionLocation[i][0] = True
-        #绘制存在动作的方格
-        for recIndex in moveRec:
-            cv2.rectangle(imgs[i], smallRecs[recIndex[0]][recIndex[1]][0], smallRecs[recIndex[0]][recIndex[1]][1],
-                          (0, 0, 255), thickness=1)
-        #计算完成速度并显示
-        finishRate = i / len(imgs) * 100
-        print(("\rMotion Detection Processing: %4.2f %%\t" % finishRate) + "▋" * int(finishRate/5), end='') if i & 15 == 0 else 0
-    
-    #未完成线程数递减
-    unFinished[0] -= 1
-    print("\rMotion Detection Processing:  100%\t", "▋" * 20, "\nMotion Detection Finished, Video Generating...")
-
 import threading
 # for i in range(threadCount):
 #     threading._start_new_thread(partProcess, ((1 / threadCount) * i, (1 / threadCount) * (i + 1), i))
@@ -132,17 +151,6 @@ partProcess(0,1,0)
 #合并差值绝对值图像集合
 for i in range(threadCount):
     imgdiffs.extend(imgdifPart[i])
-
-#下沉并拼接的函数
-def cutMoveSide(newPos, inImgs, i, fromImgs, side):
-    if side == 'L':
-        inImgs[newPos][0:len(imgs[0]), 0: int(len(imgs[0][0])/2)] = fromImgs[i][0:len(imgs[0]), 0: int(len(imgs[0][0])/2)]
-        cv2.putText(inImgs[newPos], "ORIGIN: " + str(int(i / fps / 60)) + " : " + (str(int(i / fps % 60))),(10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75 , (0,0,255),2)
-    else:
-        inImgs[newPos][0:len(imgs[0]), int(len(imgs[0][0]) / 2): int(len(imgs[0][0]))] = fromImgs[i][0:len(imgs[0]), int(len(imgs[0][0]) / 2): int(len(imgs[0][0]))]
-        cv2.putText(inImgs[newPos], "ORIGIN: " + str(int(i / fps / 60)) + " : " + (str(int(i / fps % 60))), (200, 20),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
-
 
 #初始化左右侧长度
 leftLength = 0
