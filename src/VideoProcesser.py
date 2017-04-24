@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from PIL import Image
 import copy
+import MyVideo
 
 def judgeMoving(imgDiff, rec):
     """判断给定方格内是否存在运动的函数
@@ -17,9 +18,9 @@ def judgeMoving(imgDiff, rec):
     for i in range(rec[0][1], rec[1][1],3):
         for j in range(rec[0][0], rec[1][0], 3):
                 recTotalPixValue += imgDiff[i][j][j % 3]
-    return recTotalPixValue > 16 * 16 * 4    #1023 means 16 * 16 * 4  means 16 * 16 * 35 / 3(rgb) / 3(skiped pix)
+    return recTotalPixValue > abs(rec[0][1] - rec[1][1]) * abs(rec[1][0] - rec[0][0]) * 4    #1023 means 16 * 16 * 4  means 16 * 16 * 35 / 3(rgb) / 3(skiped pix)
 
-def detectAndSignMotions(videoImages, videoAverageImage, videoDiffImages, smallRects, motionSides):
+def detectAndSignMotions(videoImages, videoAverageImage, videoDiffImages, sourceVideo, motionSides):
     """检测动作并绘制红方格
     Args:
         videoImages: 存储着原始视频的图像集合
@@ -38,17 +39,17 @@ def detectAndSignMotions(videoImages, videoAverageImage, videoDiffImages, smallR
         videoDiffImages.append(copy.copy(diffImage)) #差值图像存入该线程的差值图像库数组
 
         #检测存在动作的方格，并以方格索引的方式存入moveRec tuple(colIndex, rowIndex)
-        for colIndex in range(len(smallRects)):
-            for rowIndex in range(len(smallRects[0])):
-                if judgeMoving(diffImage, smallRects[colIndex][rowIndex]):
-                    moveRec.append((colIndex, rowIndex))
-                    if colIndex > 11:
+        for colIndex in range(sourceVideo.rectColCount):
+            for rowIndex in range(sourceVideo.rectRowCount):
+                if judgeMoving(diffImage, sourceVideo.getRectsPosition(rowIndex, colIndex)):
+                    moveRec.append((rowIndex, colIndex))
+                    if colIndex > int(sourceVideo.rectColCount / 2):
                         motionSides[i][1] = True
                     else:
                         motionSides[i][0] = True
         #绘制存在动作的方格
         for recIndex in moveRec:
-            cv2.rectangle(videoImages[i], smallRects[recIndex[0]][recIndex[1]][0], smallRects[recIndex[0]][recIndex[1]][1],
+            cv2.rectangle(videoImages[i], sourceVideo.getRectsPosition(recIndex[0],recIndex[1])[0], sourceVideo.getRectsPosition(recIndex[0],recIndex[1])[1],
                           (0, 0, 255), thickness=1)
         #计算完成速度并显示
         finishRate = i / len(videoImages) * 100
