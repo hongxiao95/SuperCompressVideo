@@ -28,7 +28,7 @@ def main():
     sourceVideoFileName = r"../SourceVideos/SourceVideo2.mp4"
     outPutVideoFileName = r"../OutputVideos/Output1.avi"
     outPutDifFileName = r"../OutputVideos/Diff1.avi"
-    smallRectWidthInPix = 8
+    smallRectWidthInPix = 16
 
     sourceVideo = MyVideo(sourceVideoFileName, smallRectWidthInPix)
 
@@ -37,18 +37,7 @@ def main():
     motionSides = [[False, False] for i in range(sourceVideo.frameCount)]       #初始化每一帧的动作位置数组
 
     videoAverageImage = sourceVideo.getAverageFrame(0.2, True)     #平均帧生成
-
-    #重新获取视频对象，用于读取视频完整内容
-    sourceVideo.reCapVideo()
-
-    tmpIm = sourceVideo.readVideoImage()       #准备读取完整视频内容
-    im = copy.copy(tmpIm)
-    videoImgs.append(tmpIm)
-    for i in range(sourceVideo.frameCount - 1):
-        tmpIm = sourceVideo.readVideoImage()
-        # _, tmpIm = cap.read()
-        videoImgs.append(tmpIm)
-    
+    videoImgs = sourceVideo.getFramesImageList()        #读取视频所有图像
     sourceVideo.release()
 
     """准备处理视频"""

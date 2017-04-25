@@ -103,3 +103,14 @@ class MyVideo(object):
         averageFrame /= tempImageCount
         return np.uint8(averageFrame)
        
+    def getFramesImageList(self):
+        """获取所有图像的列表
+        """
+        if self.currentFrameIndex != 0:
+            self.reCapVideo()
+        
+        framesImageList = []
+        for i in range(self.frameCount):
+            framesImageList.append(np.uint8(self.readVideoImage()))
+        
+        return framesImageList
