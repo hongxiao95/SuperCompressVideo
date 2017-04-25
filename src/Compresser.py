@@ -4,7 +4,7 @@ import copy
 import random
 from PIL import Image
 import time
-import VideoProcesser
+from VideoProcesser import VideoProcesser
 from MyVideo import MyVideo
 
 '''
@@ -21,7 +21,6 @@ from MyVideo import MyVideo
 7、主函数参数化调用
 '''
 
-
 def main():
     startTime = time.time()     #标记起始时间
 
@@ -34,7 +33,9 @@ def main():
 
     videoImgs = []      #初始化每一帧的图像数组
     videoDiffImages = []        #初始化差值图像数组
-    motionSides = [[False, False] for i in range(sourceVideo.frameCount)]       #初始化每一帧的动作位置数组
+    motionSides = [VideoProcesser.NO_MOTION for i in range(sourceVideo.frameCount)]
+
+    # motionSides = [[False, False] for i in range(sourceVideo.frameCount)]       #初始化每一帧的动作位置数组
 
     videoAverageImage = sourceVideo.getAverageFrame(0.2, True)     #平均帧生成
     videoImgs = sourceVideo.getFramesImageList()        #读取视频所有图像
@@ -45,17 +46,16 @@ def main():
 
     leftLength = 0      #初始化左右侧长度
     rightLength = 0
-
     
     newPos = 0      #统计左右侧长度并沉降有动作的帧
     for i in range(len(videoImgs)):
-        if motionSides[i][0]:
+        if motionSides[i] & VideoProcesser.LEFT_MOTION == VideoProcesser.LEFT_MOTION:
             VideoProcesser.cutMoveSide(newPos, videoImgs, i, videoImgs, 'L', sourceVideo.fps)
             newPos+=1
     leftLength = newPos
     newPos = 0
     for i in range(len(videoImgs)):
-        if motionSides[i][1]:
+        if motionSides[i] & VideoProcesser.RIGHT_MOTION == VideoProcesser.RIGHT_MOTION:
             VideoProcesser.cutMoveSide(newPos, videoImgs, i, videoImgs, 'R', sourceVideo.fps)
             newPos+=1
     rightLength = newPos
