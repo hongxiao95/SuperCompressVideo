@@ -1,6 +1,6 @@
 import cv2
 from PIL import Image
-import numpy
+import numpy as np
 
 class MyVideo(object):
     """MyVideo 类，封装过的openCv读取到的视频及一些常用操作
@@ -8,7 +8,7 @@ class MyVideo(object):
 
     def __init__(self, sourceVideoFileName, smallRectWidthInPix):
         self.sourceVideoFileName = sourceVideoFileName
-        self.cap = cv2.VideoCapture(self.sourceVideoFileName)
+        self.captureVideo()
         self.initVideoInfo()
         self.smallRectWidthInPix = min(smallRectWidthInPix, self.frameHeight, self.frameWidth)
         self.initRectsInfo()
@@ -20,6 +20,11 @@ class MyVideo(object):
         self.frameHeight = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
         self.frameCount = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
         self.fps = float(self.cap.get(cv2.CAP_PROP_FPS))
+        
+    def captureVideo(self):
+        """封装的获取视频句柄"""
+        self.cap = cv2.VideoCapture(self.sourceVideoFileName)
+        self.currentFrameIndex = 0
     
     def initRectsInfo(self):
         """计算方格行列数
@@ -47,7 +52,7 @@ class MyVideo(object):
         """重新获取视频句柄
         """
         self.cap.release()
-        self.cap = cv2.VideoCapture(self.sourceVideoFileName)
+        self.captureVideo()
         self.initVideoInfo()
         self.smallRectWidthInPix = min(self.smallRectWidthInPix, self.frameHeight, self.frameWidth)
         self.initRectsInfo()
@@ -55,6 +60,7 @@ class MyVideo(object):
     def readVideoImage(self):
         """读取当前视频图像
         """
+        self.currentFrameIndex += 1
         return self.cap.read()[1]
 
     def getVideoSize(self):
@@ -63,4 +69,37 @@ class MyVideo(object):
         return (self.frameWidth, self.frameHeight)
 
     def release(self):
+        """释放视频句柄
+        """
         self.cap.release()
+        self.currentFrameIndex = 0
+    
+    def getAverageFrame(self, calcRate, offOrOnPrintInfo = False):
+        """计算平均帧
+        """
+        if self.currentFrameIndex != 0:
+            self.reCapVideo()
+        
+        calcRate = min(1, calcRate)
+        skippedEach = (1 / calcRate)
+
+        averageFrame = np.float32(self.readVideoImage())
+        tempImageCount = 1
+
+        if offOrOnPrintInfo:
+            finishRate = 1 / self.frameCount * 100
+            print(("Getting Average Frame... %4.2f %%\t" % finishRate) +
+              "▋" * int(finishRate / 5), end="")
+        for i in range(1, self.frameCount):
+            tmpFrame = self.readVideoImage()
+            if i % skippedEach == 0:
+                averageFrame += np.float32(tmpFrame)
+                tempImageCount += 1
+                if offOrOnPrintInfo:
+                    finishRate = i / self.frameCount * 100
+                    print("\r" + " " * 70 + ("\rGetting Average Frame... %4.2f %%\t" % 
+                      finishRate) + "▋" * int(finishRate / 5), end="")
+        
+        averageFrame /= tempImageCount
+        return np.uint8(averageFrame)
+       

@@ -36,15 +36,7 @@ def main():
     videoDiffImages = []        #初始化差值图像数组
     motionSides = [[False, False] for i in range(sourceVideo.frameCount)]       #初始化每一帧的动作位置数组
 
-    videoAverageImage = sourceVideo.readVideoImage()       #初始化平均帧，从视频首帧开始
-    videoAverageImage = np.float32(videoAverageImage) / (sourceVideo.frameCount / 5)        #取视频前五分之一参与平均帧计算
-
-    for fr in range(4, sourceVideo.frameCount - 1, 5):
-        """只取视频前五分之一计算平均帧"""
-        a = sourceVideo.readVideoImage()
-        a = np.float32(a)
-        videoAverageImage = videoAverageImage + a / (sourceVideo.frameCount / 5)
-    videoAverageImage = np.uint8(videoAverageImage)     #平均帧生成
+    videoAverageImage = sourceVideo.getAverageFrame(0.2, True)     #平均帧生成
 
     #重新获取视频对象，用于读取视频完整内容
     sourceVideo.reCapVideo()

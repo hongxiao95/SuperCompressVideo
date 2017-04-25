@@ -32,6 +32,7 @@ def detectAndSignMotions(videoImages, videoAverageImage, videoDiffImages, source
     Returns:
         void
     """
+    print()
     for i in range(len(videoImages)):
         moveRec = [] #存储存在动作的方格
         diffImage = np.array(videoAverageImage)
