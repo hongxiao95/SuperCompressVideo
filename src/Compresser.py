@@ -14,9 +14,9 @@ from MyVideo import MyVideo
 3、剥离函数到模块文件 OK
 4、撰写文档字符串注释 OK
 5、规范化定义等的位置 OK
-6、方格划分参数化
-6、获取小方格坐标函数化
-7、画面位置参数化
+6、方格划分参数化 OK
+6、获取小方格坐标函数化 OK
+7、画面位置参数化 OK
 6、输入输出视频画面大小的一般化
 7、主函数参数化调用
 '''
@@ -43,30 +43,20 @@ def main():
 
     """准备处理视频"""
     VideoProcesser.detectAndSignMotions(videoImgs, videoAverageImage, videoDiffImages, sourceVideo, motionSides)     #标记所有动作并绘制红框
-
-    leftLength = 0      #初始化左右侧长度
-    rightLength = 0
     
-    newPos = 0      #统计左右侧长度并沉降有动作的帧
+    newPoses = [0, 0]      #统计左右侧长度并沉降有动作的帧
     for i in range(len(videoImgs)):
-        if bool(motionSides[i] & VideoProcesser.LEFT_MOTION):
-            VideoProcesser.cutMoveSide(newPos, videoImgs, i, videoImgs, motionSides[i], sourceVideo.fps)
-            newPos+=1
-    leftLength = newPos
-    newPos = 0
-    for i in range(len(videoImgs)):
-        if bool(motionSides[i] & VideoProcesser.RIGHT_MOTION):
-            VideoProcesser.cutMoveSide(newPos, videoImgs, i, videoImgs, motionSides[i], sourceVideo.fps)
-            newPos+=1
-    rightLength = newPos
+        VideoProcesser.cutMoveSide(newPoses, videoImgs, i, videoImgs, motionSides[i], sourceVideo.fps)
+    
+    leftLength, rightLength = newPoses      #统计左右侧长度并沉降有动作的帧
 
-    newLength = rightLength if rightLength > leftLength else leftLength     #用平均帧填充剩余空白
+    newLength = max(rightLength, leftLength)     #用平均帧填充剩余空白
     if newLength > leftLength:
         for i in range(leftLength, newLength):
-            VideoProcesser.cutMoveSide(i, videoImgs, 0, [videoAverageImage], VideoProcesser.LEFT_MOTION, sourceVideo.fps)
+            VideoProcesser.cutMoveSide([i,0], videoImgs, 0, [videoAverageImage], VideoProcesser.LEFT_MOTION, sourceVideo.fps)
     else:
         for i in range(rightLength, newLength):
-            VideoProcesser.cutMoveSide(i,videoImgs,  0, [videoAverageImage], VideoProcesser.RIGHT_MOTION, sourceVideo.fps)
+            VideoProcesser.cutMoveSide([0,i],videoImgs,  0, [videoAverageImage], VideoProcesser.RIGHT_MOTION, sourceVideo.fps)
 
     """新建媒体文件写入参数"""
     fcc = cv2.VideoWriter_fourcc('X','V','I','D')

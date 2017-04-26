@@ -70,24 +70,27 @@ class VideoProcesser(object):
         print("\rMotion Detection Processing:  100%\t", "▋" * 20, "\nMotion Detection Finished, Video Generating...")
 
     @classmethod
-    def cutMoveSide(cls, newPos, intoImgs, oldPos, fromImgs, side, fps):
+    def cutMoveSide(cls, newPoses, intoImgs, oldPos, fromImgs, side, fps):
         """将有动作的半画面下沉拼接
         
         Args:
-            newPos: 画面下沉后拼接至的新帧序号
+            newPoses: 长度为2的列表画面下沉后拼接至的新帧序号
             intoImgs: 画面拼接至的帧集
             oldPos: 需要拼接的画面的原位置
             fromImgs: 获取源图像的帧集
-            side: 哪一边需要下沉，取值为 'L' 或 'R'
+            side: 哪一边需要下沉，VideoProcesser.XXXMotion
             fps: 视频帧率
         
         Returns:
             void
         """
+
         if bool(side & VideoProcesser.LEFT_MOTION):
-            intoImgs[newPos][0:len(intoImgs[0]), 0: int(len(intoImgs[0][0])/2)] = fromImgs[oldPos][0:len(fromImgs[0]), 0: int(len(fromImgs[0][0])/2)]
-            cv2.putText(intoImgs[newPos], "ORIGIN: " + str(int(oldPos / fps / 60)) + " : " + (str(int(oldPos / fps % 60))),(10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75 , (0,0,255),2)
-        else:
-            intoImgs[newPos][0:len(intoImgs[0]), int(len(intoImgs[0][0]) / 2): int(len(intoImgs[0][0]))] = fromImgs[oldPos][0:len(fromImgs[0]), int(len(fromImgs[0][0]) / 2): int(len(fromImgs[0][0]))]
-            cv2.putText(intoImgs[newPos], "ORIGIN: " + str(int(oldPos / fps / 60)) + " : " + (str(int(oldPos / fps % 60))), (200, 20),
+            intoImgs[newPoses[0]][0:len(intoImgs[0]), 0: int(len(intoImgs[0][0])/2)] = fromImgs[oldPos][0:len(fromImgs[0]), 0: int(len(fromImgs[0][0])/2)]
+            cv2.putText(intoImgs[newPoses[0]], "ORIGIN: " + str(int(oldPos / fps / 60)) + " : " + (str(int(oldPos / fps % 60))),(10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75 , (0,0,255),2)
+            newPoses[0] += 1
+        if bool(side & VideoProcesser.RIGHT_MOTION):
+            intoImgs[newPoses[1]][0:len(intoImgs[0]), int(len(intoImgs[0][0]) / 2): int(len(intoImgs[0][0]))] = fromImgs[oldPos][0:len(fromImgs[0]), int(len(fromImgs[0][0]) / 2): int(len(fromImgs[0][0]))]
+            cv2.putText(intoImgs[newPoses[1]], "ORIGIN: " + str(int(oldPos / fps / 60)) + " : " + (str(int(oldPos / fps % 60))), (200, 20),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
+            newPoses[1] += 1
