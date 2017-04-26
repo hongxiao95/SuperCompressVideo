@@ -84,7 +84,7 @@ class VideoProcesser(object):
         Returns:
             void
         """
-        if side == 'L':
+        if bool(side & VideoProcesser.LEFT_MOTION):
             intoImgs[newPos][0:len(intoImgs[0]), 0: int(len(intoImgs[0][0])/2)] = fromImgs[oldPos][0:len(fromImgs[0]), 0: int(len(fromImgs[0][0])/2)]
             cv2.putText(intoImgs[newPos], "ORIGIN: " + str(int(oldPos / fps / 60)) + " : " + (str(int(oldPos / fps % 60))),(10,20), cv2.FONT_HERSHEY_SIMPLEX, 0.75 , (0,0,255),2)
         else:
