@@ -17,16 +17,16 @@ from MyVideo import MyVideo
 6、方格划分参数化 OK
 6、获取小方格坐标函数化 OK
 7、画面位置参数化 OK
-6、输入输出视频画面大小的一般化
+6、输入输出视频画面大小的一般化 OK?
 7、主函数参数化调用
 '''
 
 def main():
     startTime = time.time()     #标记起始时间
 
-    sourceVideoFileName = r"../SourceVideos/SourceVideo2.mp4"
-    outPutVideoFileName = r"../OutputVideos/Output1.avi"
-    outPutDifFileName = r"../OutputVideos/Diff1.avi"
+    sourceVideoFileName = r"../SourceVideos/KoyanagiLab.mp4"
+    outPutVideoFileName = r"../OutputVideos/KoyanagiLabOut.avi"
+    outPutDifFileName = r"../OutputVideos/KoyanagiLabDiff.avi"
     smallRectWidthInPix = 16
 
     sourceVideo = MyVideo(sourceVideoFileName, smallRectWidthInPix)

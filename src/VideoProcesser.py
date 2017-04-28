@@ -91,6 +91,6 @@ class VideoProcesser(object):
             newPoses[0] += 1
         if bool(side & VideoProcesser.RIGHT_MOTION):
             intoImgs[newPoses[1]][0:len(intoImgs[0]), int(len(intoImgs[0][0]) / 2): int(len(intoImgs[0][0]))] = fromImgs[oldPos][0:len(fromImgs[0]), int(len(fromImgs[0][0]) / 2): int(len(fromImgs[0][0]))]
-            cv2.putText(intoImgs[newPoses[1]], "ORIGIN: " + str(int(oldPos / fps / 60)) + " : " + (str(int(oldPos / fps % 60))), (200, 20),
+            cv2.putText(intoImgs[newPoses[1]], "ORIGIN: " + str(int(oldPos / fps / 60)) + " : " + (str(int(oldPos / fps % 60))), (int(len(intoImgs[0][0]) / 2 + 10), 20),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.75, (0, 0, 255), 2)
             newPoses[1] += 1
